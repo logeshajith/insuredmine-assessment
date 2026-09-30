@@ -72,6 +72,7 @@ function runWorker() {
   const app = require('./app');
   const connectDB = require('./config/db');
   const { startCpuMonitor } = require('./services/cpuMonitor');
+  const { startScheduler } = require('./services/scheduler');
 
   const PORT = process.env.PORT || 3000;
 
@@ -87,12 +88,15 @@ function runWorker() {
       console.log(`[Worker ${process.pid}] Listening on http://localhost:${PORT}`);
     });
 
+    const scheduler = startScheduler({ intervalMs: Number(process.env.SCHEDULER_INTERVAL_MS) || 5000 });
+
     // Graceful shutdown: stop new requests, finish current ones, close DB, then exit
     let closing = false;
     const shutdown = (reason) => {
       if (closing) return;
       closing = true;
       console.warn(`[Worker ${process.pid}] Graceful shutdown: ${reason}`);
+            scheduler.stop(); // stop picking new jobs before shutting down
 
       server.close(async () => {
         await mongoose.connection.close();

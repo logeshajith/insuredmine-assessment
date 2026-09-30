@@ -11,6 +11,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/upload', require('./routes/upload.routes'));
 app.use('/api/upload', require('./routes/upload.routes'));
 app.use('/api/policies', require('./routes/policy.routes'));
+app.use('/api/messages', require('./routes/message.routes'));
 
 // Test-only route, disabled in production
 if (process.env.NODE_ENV !== 'production') {
