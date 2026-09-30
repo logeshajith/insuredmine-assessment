@@ -8,7 +8,7 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', pid: process.pid, time: new Date() });
 });
 
-// Routes will be added here later
+app.use('/api/upload', require('./routes/upload.routes'));
 
 // 404 for unknown routes
 app.use((req, res) => res.status(404).json({ error: 'Route not found' }));
