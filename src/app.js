@@ -9,6 +9,8 @@ app.get('/api/health', (req, res) => {
 });
 
 app.use('/api/upload', require('./routes/upload.routes'));
+app.use('/api/upload', require('./routes/upload.routes'));
+app.use('/api/policies', require('./routes/policy.routes'));
 
 // 404 for unknown routes
 app.use((req, res) => res.status(404).json({ error: 'Route not found' }));
