@@ -10,6 +10,7 @@ A Node.js + Express + MongoDB backend that imports insurance policy data from CS
 - **File upload and parsing:** Multer, SheetJS (xlsx)
 - **Concurrency:** `worker_threads` (import), `cluster` (multi-worker server)
 - **Dev tools:** Nodemon, Postman
+- **Testing:** Mocha, Chai, Supertest
 
 ## Features
 
@@ -51,6 +52,7 @@ Copy `.env.example` to `.env` and adjust if needed.
 |---|---|---|
 | `PORT` | `3000` | HTTP port |
 | `MONGO_URI` | `mongodb://127.0.0.1:27017/insuredmine` | MongoDB connection string |
+| `MONGO_URI_TEST` | `mongodb://127.0.0.1:27017/insuredmine_test` | Separate database used by tests (dropped after each run) |
 | `WORKERS` | CPU core count | Number of cluster workers |
 | `CPU_THRESHOLD` | `70` | CPU % that triggers a worker restart |
 | `CPU_CHECK_INTERVAL_MS` | `5000` | How often each worker checks its CPU |
@@ -85,6 +87,55 @@ Expected startup output:
 ```
 
 A sample data file is included at `sample-data/data-sheet.csv`, and a Postman collection is in the `postman/` folder.
+
+## Testing
+
+Tests use **Mocha**, **Chai**, and **Supertest**, and run against a separate database (`MONGO_URI_TEST`), which is dropped after every run. Real data is never touched. MongoDB must be running.
+
+```bash
+npm test
+```
+
+| Area | What is tested |
+|---|---|
+| Upload API | CSV import through the worker thread with exact expected counts, skipped invalid rows, duplicate users grouped, rejection of missing or non-CSV files, invalid and unknown job IDs |
+| Search API | Case-insensitive partial name match, accounts and policies with resolved category, carrier, and agent names, 404 and 400 cases |
+| Summary API | Grouping of multiple policies per user, total premium, sorting, pagination |
+| Schedule API | Valid scheduling, and 400 for past time, invalid date, wrong time format, empty message |
+| Scheduler | A due message is inserted **exactly once** with two schedulers running at the same time (simulating two cluster workers) |
+
+Result:
+
+```
+  Messages
+    Schedule message API
+      ✔ schedules a valid future message
+      ✔ returns 400 for past time
+      ✔ returns 400 for invalid date
+      ✔ returns 400 for wrong time format
+      ✔ returns 400 for empty message
+    Scheduler
+      ✔ inserts a due message exactly once, even with two schedulers running
+
+  Policy APIs
+    Search API
+      ✔ finds a user and their policies (case-insensitive, partial name)
+      ✔ returns 404 when no user matches
+      ✔ returns 400 when username is missing
+    Summary API
+      ✔ groups policies by user with count and total premium
+      ✔ supports pagination
+
+  Upload API
+    ✔ imports CSV in the background and reports a summary
+    ✔ returns 400 when no file is sent
+    ✔ returns 400 for a non-CSV/XLSX file
+    ✔ returns 400 for an invalid job ID and 404 for an unknown one
+
+  15 passing (2s)
+```
+
+Note: Mocha was chosen over Jest because Jest's sandboxed environment breaks the MongoDB driver's connection handshake on Node 24 (`Missing required sub-document 'driver'`). Mocha runs tests in plain Node.js, so the app is tested exactly as it runs.
 
 ## API reference
 
@@ -324,6 +375,11 @@ Because Task 2.1 can restart workers at any time, messages are **not** scheduled
 
 Verified result: a message scheduled for `16:28:00Z` was inserted at `16:28:04.754Z`, exactly once, with two workers running.
 
+### Error handling
+
+- Client errors (400, 404) return a clean JSON error message.
+- Full error details are logged only for real server errors (500), keeping logs readable.
+
 ## Assumptions
 
 - **"Day" means a calendar date** (`YYYY-MM-DD`), and time is interpreted in IST (`+05:30`). This is configurable via `TIMEZONE_OFFSET`.
@@ -349,6 +405,7 @@ src/
 │   └── scheduler.js           Restart-safe message scheduler
 └── workers/
     └── importWorker.js        CSV/XLSX import in a worker thread
+tests/                         Mocha + Chai + Supertest tests and a small CSV fixture
 sample-data/                   Provided data sheet
 postman/                       Postman collection
 uploads/                       Temporary upload folder (files deleted after import)

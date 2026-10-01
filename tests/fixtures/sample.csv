@@ -1,0 +1,4 @@
+agent,userType,policy_mode,producer,policy_number,premium_amount_written,premium_amount,policy_type,company_name,category_name,policy_start_date,policy_end_date,csr,account_name,email,gender,firstname,city,account_type,phone,address,state,zip,dob,primary,Applicant ID,agency_id,hasActive ClientPolicy
+Alex Watson,Active Client,12,P1,TESTPOL001,,1000.50,Single,Test Carrier A,Commercial Auto,2018-11-02,2019-11-02,C1,Test Account One,test.one@example.com,Female,Test User One,CITY,Commercial,9000000001,1 TEST ST,NC,27028,1960-02-11,,,,
+Alex Watson,Active Client,12,P1,TESTPOL002,,500.25,Single,Test Carrier B,Homeowners,2018-12-01,2019-12-01,C1,Test Account One,test.one@example.com,Female,Test User One,CITY,Personal,9000000001,1 TEST ST,NC,27028,1960-02-11,,,,
+Jane Doe,Active Client,12,P2,,,300,Single,Test Carrier A,Commercial Auto,2018-11-02,2019-11-02,C2,Test Account Two,test.two@example.com,,Test User Two,CITY,Personal,9000000002,2 TEST ST,SC,29001,1970-05-05,,,,

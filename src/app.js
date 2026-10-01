@@ -21,10 +21,18 @@ if (process.env.NODE_ENV !== 'production') {
 // 404 for unknown routes
 app.use((req, res) => res.status(404).json({ error: 'Route not found' }));
 
+// Multer errors (e.g. file too large) are client errors
+app.use((err, req, res, next) => {
+  if (err.name === 'MulterError') err.status = 400;
+  next(err);
+});
+
 // Central error handler
 app.use((err, req, res, next) => {
-  console.error(err);
-  res.status(err.status || 500).json({ error: err.message || 'Internal server error' });
+  const status = err.status || 500;
+  // Log full details only for real server errors, not for bad user input
+  if (status >= 500) console.error(err);
+  res.status(status).json({ error: err.message || 'Internal server error' });
 });
 
 module.exports = app;
